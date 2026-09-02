@@ -53,6 +53,30 @@ mvn package   # builds target/tax-pdf-parser.jar (shaded, ~40MB — bundles
 
 (Prefix with `mise exec --` if `java`/`mvn` aren't already on your `PATH`.)
 
+## Development
+
+CI (`.github/workflows/ci.yml`) runs on every push to `master` and every PR,
+and fails the build on any violation — run the same checks locally before
+pushing:
+
+```
+mvn spotless:apply   # auto-formats (google-java-format, AOSP style)
+mvn verify            # tests + Checkstyle (checkstyle.xml) + SpotBugs
+cfn-lint template.yaml
+```
+
+Checkstyle's ruleset is deliberately narrow — unused/star imports, line
+length, brace/whitespace consistency, naming — and does not require
+Javadoc, matching this project's low-comment style. SpotBugs findings can
+be suppressed in `spotbugs-exclude.xml` when they're a known false
+positive for a deliberate pattern (e.g. `EI_EXPOSE_REP2` on
+dependency-injected constructors) — document the why there, don't just
+delete the finding.
+
+Dependabot (`.github/dependabot.yml`) opens weekly PRs for outdated Maven
+and GitHub Actions dependencies — `opendataloader-pdf-core` in particular
+moves fast.
+
 ## Deploy
 
 Requires the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
