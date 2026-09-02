@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  tax-pdf-parser — pre-processes jaaropgave/aangifte PDFs into markdown
+  (OpenDataLoader fast mode) ahead of Claude field extraction in
+  belastingaangifte-check. See CONTEXT.md for the domain glossary.
+
+Resources:
+  # The Handoff PDF's home — see CONTEXT.md. Private, SSE-encrypted, and
+  # short-lived: these are Dutch taxpayers' PII, uploaded by the caller
+  # (belastingaangifte-check's Next.js server) and read by the Lambda below.
+  HandoffBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOrphanedHandoffPdfs
+            Status: Enabled
+            # 1 day is S3 lifecycle's finest grain. This is a backstop only —
+            # the Lambda deletes the object itself on a successful parse
+            # (Handler.java); this rule only catches orphans left by failures.
+            ExpirationInDays: 1
+
+  ParserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: tax-pdf-parser
+      Handler: com.taxpdfparser.Handler::handleRequest
+      Runtime: java21
+      CodeUri: target/tax-pdf-parser.jar
+      MemorySize: 1024
+      Timeout: 60
+      # SnapStart does not support ephemeral storage above 512MB — default
+      # (512MB) is left in place. Jaaropgave PDFs are a handful of pages.
+      SnapStart:
+        ApplyOn: PublishedVersions
+      AutoPublishAlias: live
+      Environment:
+        Variables:
+          JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+      Policies:
+        - Statement:
+            - Sid: ReadAndDeleteHandoffPdf
+              Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:DeleteObject
+              Resource: !Sub "${HandoffBucket.Arn}/*"
+      FunctionUrlConfig:
+        AuthType: AWS_IAM
+
+Outputs:
+  HandoffBucketName:
+    Description: Upload the PDF here before invoking the function with its key.
+    Value: !Ref HandoffBucket
+  ParserFunctionUrl:
+    Description: >
+      IAM-authenticated (SigV4) Function URL. The caller must sign requests —
+      see belastingaangifte-check's lib/pdf-parser-client.ts.
+    Value: !GetAtt ParserFunctionUrl.FunctionUrl
