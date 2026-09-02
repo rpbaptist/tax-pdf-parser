@@ -1,0 +1,13 @@
+<FindBugsFilter>
+  <!--
+    EI_EXPOSE_REP2 fires on every constructor that stores an injected
+    collaborator (PdfSource, S3Client, ...) directly into a field. That's
+    the dependency-injection pattern this codebase uses deliberately for
+    testability (see Handler(PdfSource), S3PdfSource(S3Client)) — the
+    field is meant to alias the caller's object, not defensively copy it.
+  -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Class name="~com\.taxpdfparser\..*"/>
+  </Match>
+</FindBugsFilter>

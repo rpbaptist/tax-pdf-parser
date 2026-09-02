@@ -4,8 +4,7 @@ public class ParseResponse {
 
     private String markdown;
 
-    public ParseResponse() {
-    }
+    public ParseResponse() {}
 
     public ParseResponse(String markdown) {
         this.markdown = markdown;

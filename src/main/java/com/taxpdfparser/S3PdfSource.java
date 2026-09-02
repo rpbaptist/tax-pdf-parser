@@ -21,7 +21,7 @@ public final class S3PdfSource implements PdfSource {
     @Override
     public byte[] fetch(String bucket, String key) {
         ResponseBytes<GetObjectResponse> object =
-            s3.getObjectAsBytes(GetObjectRequest.builder().bucket(bucket).key(key).build());
+                s3.getObjectAsBytes(GetObjectRequest.builder().bucket(bucket).key(key).build());
         return object.asByteArray();
     }
 
