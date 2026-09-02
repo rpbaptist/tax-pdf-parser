@@ -1,0 +1,5 @@
+target/
+.mvn/
+*.class
+.claude/worktrees/
+dependency-reduced-pom.xml
