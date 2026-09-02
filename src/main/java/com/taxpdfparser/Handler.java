@@ -2,17 +2,15 @@ package com.taxpdfparser;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Entry point for the Parser (see CONTEXT.md). Fetches the Handoff PDF,
- * parses it with {@link PdfParser}, and deletes it — on success only;
- * a thrown exception here is a Parse failure and propagates to the
- * caller, which falls back to its own pre-existing extraction path.
+ * Entry point for the Parser (see CONTEXT.md). Fetches the Handoff PDF, parses it with {@link
+ * PdfParser}, and deletes it — on success only; a thrown exception here is a Parse failure and
+ * propagates to the caller, which falls back to its own pre-existing extraction path.
  */
 public class Handler implements RequestHandler<ParseRequest, ParseResponse> {
 

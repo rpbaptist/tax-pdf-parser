@@ -1,23 +1,20 @@
 package com.taxpdfparser;
 
-import org.opendataloader.pdf.api.Config;
-import org.opendataloader.pdf.api.OpenDataLoaderPDF;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import org.opendataloader.pdf.api.Config;
+import org.opendataloader.pdf.api.OpenDataLoaderPDF;
 
 /**
- * Turns a PDF into markdown using OpenDataLoader's fast (deterministic,
- * local) mode. Hybrid mode is intentionally never enabled — see
- * CONTEXT.md's "Hybrid mode" entry.
+ * Turns a PDF into markdown using OpenDataLoader's fast (deterministic, local) mode. Hybrid mode is
+ * intentionally never enabled — see CONTEXT.md's "Hybrid mode" entry.
  */
 public final class PdfParser {
 
-    private PdfParser() {
-    }
+    private PdfParser() {}
 
     public static String parseToMarkdown(Path pdfPath) throws IOException {
         Config config = new Config();
