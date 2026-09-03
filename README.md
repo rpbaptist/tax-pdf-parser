@@ -92,6 +92,65 @@ sam deploy --guided   # first time — creates a samconfig.toml
 `sam deploy` prints the `HandoffBucketName` and `ParserFunctionUrl` outputs —
 belastingaangifte-check needs both.
 
+## Smoke test
+
+Run this test after each deploy. Use a real jaaropgave or aangifte PDF, not
+the synthetic fixture in `src/test/resources/fixtures/`. This checks output
+quality on a real document; `mvn test` already covers the mechanism.
+
+You need AWS CLI access as `tax-pdf-parser-deploy` (or any user with
+`s3:PutObject`/`s3:GetObject`/`s3:ListBucket` on the bucket and
+`lambda:InvokeFunction`).
+
+**1. Get the bucket name.**
+
+```
+BUCKET=$(aws cloudformation describe-stacks --stack-name tax-pdf-parser \
+  --region eu-central-1 \
+  --query "Stacks[0].Outputs[?OutputKey=='HandoffBucketName'].OutputValue" \
+  --output text)
+```
+
+**2. Upload the PDF.**
+
+```
+aws s3 cp /path/to/your.pdf "s3://$BUCKET/smoke-test.pdf" --region eu-central-1
+```
+
+**3. Invoke the Lambda.**
+
+```
+echo "{\"bucket\":\"$BUCKET\",\"key\":\"smoke-test.pdf\"}" > /tmp/payload.json
+aws lambda invoke --function-name tax-pdf-parser --region eu-central-1 \
+  --payload file:///tmp/payload.json --cli-binary-format raw-in-base64-out \
+  /tmp/smoke-out.json
+cat /tmp/smoke-out.json
+```
+
+**4. Check the output.** Read the `markdown` field in `/tmp/smoke-out.json`
+and compare it against the source PDF:
+
+- Check every currency value and percentage.
+- Check wide, dense tables for merged or dropped columns.
+- Check multi-level header tables (belastingschijven-style) closely. These
+  are a known weak point across all these parsers, not just OpenDataLoader
+  — see CONTEXT.md.
+
+**5. Confirm cleanup.** The Lambda deletes the object on success.
+
+```
+aws s3 ls "s3://$BUCKET/"
+```
+
+`smoke-test.pdf` must not appear in this listing.
+
+**If the invoke fails:** read the error in `/tmp/smoke-out.json`, then check
+the logs.
+
+```
+aws logs tail /aws/lambda/tax-pdf-parser --region eu-central-1 --since 10m
+```
+
 ## Configuration for the caller
 
 belastingaangifte-check resolves this service from five environment
@@ -119,4 +178,5 @@ parsing classes load lazily on first real invocation, a cost the SnapStart
 checkpoint doesn't capture — see `template.yaml` history for the config and
 git history for the benchmark numbers.
 
-A smoke test against real jaaropgave PDFs is still pending.
+A smoke test against real jaaropgave PDFs is still pending — see **Smoke
+test** above.
