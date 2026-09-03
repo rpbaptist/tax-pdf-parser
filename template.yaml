@@ -36,7 +36,7 @@ Resources:
       FunctionName: tax-pdf-parser
       Handler: com.taxpdfparser.Handler::handleRequest
       Runtime: java21
-      CodeUri: target/tax-pdf-parser.jar
+      CodeUri: .
       MemorySize: 1024
       Timeout: 60
       # SnapStart does not support ephemeral storage above 512MB — default
