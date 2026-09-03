@@ -29,8 +29,8 @@ tax-pdf-parser (this repo)
 ```
 
 See `template.yaml` for the full resource definitions (S3 bucket with a
-1-day lifecycle backstop, least-privilege IAM role, SnapStart on published
-versions) and `HANDOFF.md` for the original architecture decisions.
+1-day lifecycle backstop, least-privilege IAM role) and `HANDOFF.md` for the
+original architecture decisions.
 
 ## Prerequisites
 
@@ -113,5 +113,10 @@ complex tables) is wired off (`Config.HYBRID_OFF`) pending benchmark
 evidence — see CONTEXT.md's **Hybrid mode** entry and the deferred
 follow-ups listed in [issue #1](https://github.com/rpbaptist/tax-pdf-parser/issues/1).
 
-Not yet deployed. SnapStart cold-start benchmarking and a smoke test against
-real jaaropgave PDFs are pending a live deployment.
+Deployed to `eu-central-1`. SnapStart was benchmarked and dropped: it added
+~400ms to a cold invocation instead of cutting it, because OpenDataLoader's
+parsing classes load lazily on first real invocation, a cost the SnapStart
+checkpoint doesn't capture — see `template.yaml` history for the config and
+git history for the benchmark numbers.
+
+A smoke test against real jaaropgave PDFs is still pending.

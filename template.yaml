@@ -39,11 +39,6 @@ Resources:
       CodeUri: .
       MemorySize: 1024
       Timeout: 60
-      # SnapStart does not support ephemeral storage above 512MB — default
-      # (512MB) is left in place. Jaaropgave PDFs are a handful of pages.
-      SnapStart:
-        ApplyOn: PublishedVersions
-      AutoPublishAlias: live
       Environment:
         Variables:
           JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
